@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythagoras' Theorem Interactive Teaching Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        /* Custom slider styles for better accessibility & feel */
+        input[type="range"]::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+            background: #2563eb;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        /* Smooth transitions for SVG triangle points */
+        polygon, path, text {
+            transition: all 0.25s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header id="main-header" class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-md font-bold text-lg">
+                    a² + b² = c²
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Pythagoras' Theorem Explorer</h1>
+                    <p class="text-xs sm:text-sm text-slate-500">Grade 8 UK Maths Online Classroom Simulation</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="btn-presentation" onclick="togglePresentationMode()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl border border-slate-300 transition shadow-sm flex items-center space-x-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    <span id="pres-btn-text">Presentation Mode</span>
+                </button>
+                <button id="btn-reset" onclick="resetSimulation()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium rounded-xl border border-rose-200 transition shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Controls & Dynamic Triangle Visualization -->
+        <div id="visual-column" class="lg:col-span-7 flex flex-col space-y-6">
+            
+            <!-- Triangle Visualization Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center relative overflow-hidden">
+                <div class="w-full flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                        <span>Right-Angled Triangle Visualization</span>
+                    </h2>
+                    <span id="triangle-badge" class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-full">
+                        Right-Angled (90°)
+                    </span>
+                </div>
+
+                <!-- SVG Canvas Container with Responsive Scaling -->
+                <div id="canvas-container" class="w-full h-80 sm:h-96 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-100 relative p-4">
+                    <svg id="triangle-svg" viewBox="0 0 400 300" class="w-full h-full max-h-[360px] drop-shadow-sm">
+                        <!-- Grid lines for educational background -->
+                        <g stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4">
+                            <line x1="50" y1="250" x2="350" y2="250" />
+                            <line x1="50" y1="50" x2="50" y2="250" />
+                        </g>
+
+                        <!-- The Triangle Path -->
+                        <polygon id="svg-polygon" points="50,250 300,250 50,50" fill="#eff6ff" stroke="#2563eb" stroke-width="4" stroke-linejoin="round" />
+
+                        <!-- Right Angle Square Marker at vertex (50, 250) -->
+                        <path id="svg-right-angle" d="M 50 230 L 70 230 L 70 250" fill="none" stroke="#2563eb" stroke-width="2.5" />
+
+                        <!-- Side a Label (Horizontal) -->
+                        <text id="label-a-text" x="175" y="275" text-anchor="middle" class="font-bold text-sm fill-blue-700 select-none text-base">a = 6</text>
+
+                        <!-- Side b Label (Vertical) -->
+                        <text id="label-b-text" x="25" y="150" text-anchor="middle" class="font-bold text-sm fill-blue-700 select-none text-base">b = 8</text>
+
+                        <!-- Side c Label (Sloping Hypotenuse) -->
+                        <text id="label-c-text" x="195" y="140" text-anchor="middle" class="font-bold text-sm fill-rose-600 select-none text-base transform -rotate-30">c = 10</text>
+                    </svg>
+                </div>
+                
+                <div class="mt-3 text-xs text-slate-500 text-center">
+                    The hypotenuse (<span class="font-semibold text-rose-600">c</span>) is always the longest side and opposite the 90° right angle.
+                </div>
+            </div>
+
+            <!-- Interactive Sliders Card -->
+            <div id="controls-card" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+                <h3 class="text-md font-bold text-slate-800">Adjust Shorter Sides</h3>
+
+                <!-- Slider for Side a -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="slider-a" class="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span>
+                            <span>Horizontal Side (<span class="text-blue-600">a</span>)</span>
+                        </label>
+                        <span id="value-a-display" class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 font-bold rounded-lg text-sm">6</span>
+                    </div>
+                    <input id="slider-a" type="range" min="3" max="15" step="1" value="6" 
+                           oninput="onSliderChange()" onchange="onSliderChange()"
+                           class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Min: 3</span>
+                        <span>Max: 15</span>
+                    </div>
+                </div>
+
+                <!-- Slider for Side b -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="slider-b" class="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span>
+                            <span>Vertical Side (<span class="text-indigo-600">b</span>)</span>
+                        </label>
+                        <span id="value-b-display" class="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold rounded-lg text-sm">8</span>
+                    </div>
+                    <input id="slider-b" type="range" min="3" max="15" step="1" value="8" 
+                           oninput="onSliderChange()" onchange="onSliderChange()"
+                           class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Min: 3</span>
+                        <span>Max: 15</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Calculation Panel, Observation & Challenge Mode -->
+        <div id="calculation-column" class="lg:col-span-5 flex flex-col space-y-6">
+
+            <!-- Dynamic Step-by-Step Calculation Panel -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-md font-bold text-slate-800">Step-by-Step Calculation</h3>
+                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 font-mono text-xs font-semibold rounded">a² + b² = c²</span>
+                </div>
+
+                <div id="calc-steps" class="space-y-2 font-mono text-sm bg-slate-50 p-4 rounded-xl border border-slate-100 text-slate-700">
+                    <div id="step-formula" class="text-blue-900 font-semibold">6² + 8² = c²</div>
+                    <div id="step-squares">36 + 64 = c²</div>
+                    <div id="step-sum">100 = c²</div>
+                    <div id="step-sqrt">c = √100</div>
+                    <div id="step-result" class="text-rose-600 font-bold text-base pt-1 border-t border-slate-200">c = 10</div>
+                </div>
+            </div>
+
+            <!-- Observation Panel ("What do you notice?") -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/80 shadow-sm p-6 space-y-3">
+                <h3 class="text-md font-bold text-amber-900 flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>What do you notice?</span>
+                </h3>
+                <ul class="space-y-2 text-sm text-amber-900/80">
+                    <li class="flex items-start space-x-2">
+                        <span class="text-amber-600 font-bold">•</span>
+                        <span>Changing <strong class="text-amber-900">a</strong> or <strong class="text-amber-900">b</strong> changes the hypotenuse <strong class="text-rose-600">c</strong>.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <span class="text-amber-600 font-bold">•</span>
+                        <span>The hypotenuse is always the longest side of the right-angled triangle.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Challenge Mode Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-md font-bold text-slate-800">Challenge Mode</h3>
+                    <button onclick="startChallenge()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition shadow-sm text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Try a Challenge
+                    </button>
+                </div>
+
+                <div id="challenge-box" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm space-y-3 hidden">
+                    <div class="font-medium text-slate-800">
+                        Can you predict the hypotenuse before revealing the answer?
+                    </div>
+                    <div id="challenge-prompt" class="font-mono bg-white p-3 rounded-lg border border-slate-200 text-slate-700">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <div id="challenge-controls" class="flex items-center space-x-3">
+                        <button onclick="revealChallenge()" id="reveal-btn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition shadow-sm">
+                            Reveal Answer
+                        </button>
+                    </div>
+                    <div id="challenge-solution" class="font-mono text-xs bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-emerald-900 hidden space-y-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Question Prompts -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <h3 class="text-md font-bold text-slate-800">Interactive Question Prompts</h3>
+                <div class="space-y-3 text-sm text-slate-700">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="font-medium text-slate-800 mb-1">1. What happens to c when a increases?</p>
+                        <p class="text-xs text-slate-500">Answer: The hypotenuse <span class="text-rose-600 font-semibold">c</span> increases as well because the legs become longer.</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="font-medium text-slate-800 mb-1">2. Which side is the hypotenuse?</p>
+                        <p class="text-xs text-slate-500">Answer: The longest side, which is always directly opposite the 90° right angle.</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="font-medium text-slate-800 mb-1">3. Why can we use Pythagoras' theorem here?</p>
+                        <p class="text-xs text-slate-500">Answer: <strong class="text-blue-700">Because the triangle is right-angled.</strong> (It never applies to non-right-angled triangles).</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-8 py-8 px-4">
+        <div class="max-w-7xl mx-auto space-y-4">
+            <h4 class="font-bold text-slate-900 text-md flex items-center space-x-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <span>Remember — Step-by-Step Problem Solving</span>
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 1</span>
+                    Check that the triangle is right-angled.
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 2</span>
+                    Identify the hypotenuse opposite 90°.
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 3</span>
+                    Write down <span class="font-mono font-semibold">a² + b² = c²</span>.
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 4</span>
+                    Substitute the known values of <span class="font-mono">a</span> and <span class="font-mono">b</span>.
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 5</span>
+                    Solve for the missing side <span class="font-mono">c</span>.
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-blue-600 block mb-1">Step 6</span>
+                    Check that your answer makes sense (c > a and c > b).
+                </div>
+            </div>
+            <div class="text-center text-xs text-slate-400 pt-4">
+                Designed for UK Key Stage 3 / Grade 8 Mathematics Classroom Demonstrations.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // State variables
+        let isPresentationMode = false;
+
+        // Initialize on window load
+        window.onload = function() {
+            updateSimulation();
+        };
+
+        // Main function triggered when sliders move
+        function onSliderChange() {
+            updateSimulation();
+        }
+
+        // Core simulation update engine
+        function updateSimulation() {
+            const aVal = parseInt(document.getElementById('slider-a').value);
+            const bVal = parseInt(document.getElementById('slider-b').value);
+
+            // Update numerical display badges
+            document.getElementById('value-a-display').innerText = aVal;
+            document.getElementById('value-b-display').innerText = bVal;
+
+            // Calculate hypotenuse using Math.sqrt(a*a + b*b)
+            const cRaw = Math.sqrt(aVal * aVal + bVal * bVal);
+            const isInteger = Number.isInteger(cRaw);
+            const cDisplay = isInteger ? cRaw.toString() : cRaw.toFixed(2);
+
+            // Update SVG Triangle Geometry with Proportional Scaling
+            // Fixed bounding box width = 350, height = 250 (inside 400x300 viewBox)
+            // Origin right angle at (50, 250)
+            // Max slider value is 15. We scale pixels relative to max side 15.
+            const maxSide = 15;
+            const maxPxLength = 220; // Maximum allowed pixel length for a or b
+            
+            const pxA = (aVal / maxSide) * maxPxLength;
+            const pxB = (bVal / maxSide) * maxPxLength;
+
+            // Coordinates:
+            // Right angle vertex: (50, 250)
+            // Horizontal end vertex (a): (50 + pxA, 250)
+            // Vertical end vertex (b): (50, 250 - pxB)
+            const xRight = 50;
+            const yBottom = 250;
+            const xAEnd = xRight + pxA;
+            const yBEnd = yBottom - pxB;
+
+            // Update SVG polygon points: vertex1 (right angle), vertex2 (end of a), vertex3 (end of b)
+            // Note: SVG Y goes downwards, so vertex3 is yBottom - pxB
+            const polygonPoints = `${xRight},${yBottom} ${xAEnd},${yBottom} ${xRight},${yBEnd}`;
+            document.getElementById('svg-polygon').setAttribute('points', polygonPoints);
+
+            // Update Right Angle Square Marker position (always at xRight, yBottom)
+            const squareSize = 18;
+            const rightAnglePath = `M ${xRight} ${yBottom - squareSize} L ${xRight + squareSize} ${yBottom - squareSize} L ${xRight + squareSize} ${yBottom}`;
+            document.getElementById('svg-right-angle').setAttribute('d', rightAnglePath);
+
+            // Update label positions and texts
+            const labelAText = document.getElementById('label-a-text');
+            labelAText.setAttribute('x', xRight + (pxA / 2));
+            labelAText.setAttribute('y', yBottom + 22);
+            labelAText.textContent = `a = ${aVal}`;
+
+            const labelBText = document.getElementById('label-b-text');
+            labelBText.setAttribute('x', xRight - 28);
+            labelBText.setAttribute('y', yBottom - (pxB / 2));
+            labelBText.textContent = `b = ${bVal}`;
+
+            const labelCText = document.getElementById('label-c-text');
+            const midX = (xAEnd + xRight) / 2 + 15;
+            const midY = (yBottom + yBEnd) / 2 - 15;
+            labelCText.setAttribute('x', midX);
+            labelCText.setAttribute('y', midY);
+            labelCText.textContent = `c = ${cDisplay}`;
+
+            // Update Step-by-Step Calculation Panel
+            const aSq = aVal * aVal;
+            const bSq = bVal * bVal;
+            const sumSq = aSq + bSq;
+
+            document.getElementById('step-formula').textContent = `${aVal}² + ${bVal}² = c²`;
+            document.getElementById('step-squares').textContent = `${aSq} + ${bSq} = c²`;
+            document.getElementById('step-sum').textContent = `${sumSq} = c²`;
+            document.getElementById('step-sqrt').textContent = isInteger ? `c = √${sumSq}` : `c = √${sumSq} ≈ ${cRaw.toFixed(4)}`;
+            document.getElementById('step-result').textContent = `c = ${cDisplay}`;
+        }
+
+        // Presentation Mode Toggle
+        function togglePresentationMode() {
+            isPresentationMode = !isPresentationMode;
+            const header = document.getElementById('main-header');
+            const visualCol = document.getElementById('visual-column');
+            const calcCol = document.getElementById('calculation-column');
+            const canvasContainer = document.getElementById('canvas-container');
+            const presBtnText = document.getElementById('pres-btn-text');
+            const btnPres = document.getElementById('btn-presentation');
+
+            if (isPresentationMode) {
+                presBtnText.textContent = "Exit Presentation";
+                btnPres.classList.remove('bg-slate-100', 'text-slate-700');
+                btnPres.classList.add('bg-blue-600', 'text-white');
+                
+                // Hide non-essential controls or minimize side column
+                calcCol.style.display = 'none';
+                visualCol.classList.remove('lg:col-span-7');
+                visualCol.classList.add('lg:col-span-12');
+                canvasContainer.classList.remove('h-80', 'sm:h-96');
+                canvasContainer.classList.add('h-[450px]');
+            } else {
+                presBtnText.textContent = "Presentation Mode";
+                btnPres.classList.remove('bg-blue-600', 'text-white');
+                btnPres.classList.add('bg-slate-100', 'text-slate-700');
+                
+                calcCol.style.display = 'flex';
+                visualCol.classList.remove('lg:col-span-12');
+                visualCol.classList.add('lg:col-span-7');
+                canvasContainer.classList.remove('h-[450px]');
+                canvasContainer.classList.add('h-80', 'sm:h-96');
+            }
+        }
+
+        // Teacher-Friendly Reset Button
+        function resetSimulation() {
+            document.getElementById('slider-a').value = 6;
+            document.getElementById('slider-b').value = 8;
+            if (isPresentationMode) {
+                togglePresentationMode();
+            }
+            // Hide challenge box if open
+            document.getElementById('challenge-box').classList.add('hidden');
+            updateSimulation();
+        }
+
+        // Challenge Mode Generator
+        let currentChallenge = { a: 0, b: 0, c: 0 };
+        function startChallenge() {
+            // Preset right-angled integer triples or random integer triples (e.g. 3,4,5 ; 5,12,13 ; 6,8,10 ; 9,12,15)
+            const integerTriples = [
+                {a: 3, b: 4, c: 5},
+                {a: 6, b: 8, c: 10},
+                {a: 5, b: 12, c: 13},
+                {a: 9, b: 12, c: 15},
+                {a: 3, b: 3, c: 4.24} // fallback or let's use cleanly generated integers
+            ];
+            
+            // Pick a random pair of integer a and b between 3 and 12 where sqrt(a^2+b^2) might be clean or integer
+            const validPairs = [
+                {a: 9, b: 12, c: 15},
+                {a: 5, b: 12, c: 13},
+                {a: 6, b: 8, c: 10},
+                {a: 3, b: 4, c: 5}
+            ];
+            const randomPair = validPairs[Math.floor(Math.random() * validPairs.length)];
+            currentChallenge = randomPair;
+
+            const challengeBox = document.getElementById('challenge-box');
+            const challengePrompt = document.getElementById('challenge-prompt');
+            const challengeSolution = document.getElementById('challenge-solution');
+            const revealBtn = document.getElementById('reveal-btn');
+
+            challengeBox.classList.remove('hidden');
+            revealBtn.classList.remove('hidden');
+            challengeSolution.classList.add('hidden');
+
+            challengePrompt.innerHTML = `a = ${currentChallenge.a}<br>b = ${currentChallenge.b}<br><strong class="text-indigo-600">Find c.</strong>`;
+        }
+
+        // Reveal Challenge Answer
+        function revealChallenge() {
+            const a = currentChallenge.a;
+            const b = currentChallenge.b;
+            const c = currentChallenge.c;
+            const aSq = a * a;
+            const bSq = b * b;
+            const sumSq = aSq + bSq;
+
+            const challengeSolution = document.getElementById('challenge-solution');
+            const revealBtn = document.getElementById('reveal-btn');
+
+            challengeSolution.classList.remove('hidden');
+            revealBtn.classList.add('hidden');
+
+            challengeSolution.innerHTML = `
+                <div>${a}² + ${b}² = c²</div>
+                <div>${aSq} + ${bSq} = c²</div>
+                <div>${sumSq} = c²</div>
+                <div>c = √${sumSq}</div>
+                <div class="font-bold text-emerald-900 text-sm pt-1">c = ${c}</div>
+            `;
+        }
+    </script>
+</body>
+</html>
